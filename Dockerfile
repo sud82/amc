@@ -1,17 +1,21 @@
-FROM debian:stretch-slim 
+# Use the latest stable Debian image
+FROM debian:bookworm-slim
 
-ARG AMC_VERSION=5.0.0
+# Environment variable for AMC version, replace with your required version
+ENV AMC_VERSION=5.0.0
 
-RUN apt update -y \
-    && apt -y install wget procps \
-    && wget https://github.com/aerospike-community/amc/releases/download/${AMC_VERSION}/aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb --no-check-certificate \
-    && dpkg -i aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb \
-    && rm aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb \
-    && dpkg -r wget ca-certificates \
-    && dpkg --purge wget ca-certificates \
-    && apt-get purge -y \
-    && apt autoremove -y 
+# Update package list, install necessary packages, download AMC, and perform cleanup
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget procps && \
+    wget https://github.com/aerospike-community/amc/releases/download/${AMC_VERSION}/aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb --no-check-certificate && \
+    dpkg -i aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb && \
+    rm aerospike-amc-enterprise-${AMC_VERSION}_amd64.deb && \
+    apt-get purge -y wget && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
+# Copy necessary scripts or files
 COPY ./deployment/common/amc.docker.sh /opt/amc/amc.docker.sh
 
 EXPOSE 8081
